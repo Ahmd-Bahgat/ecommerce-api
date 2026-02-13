@@ -35,7 +35,7 @@ export const addItemToCart = async ({ userId, productId, quantity }) => {
     (p) => p.product.toString() === productId,
   );
   if (existsInCart) {
-    if(product.stock < quantity || product.stock === 0){
+    if (product.stock < quantity || product.stock === 0) {
       return {
         statusCode: 400,
         data: "low stock ",
@@ -43,7 +43,7 @@ export const addItemToCart = async ({ userId, productId, quantity }) => {
     }
     existsInCart.quantity += qty;
     product.stock -= qty;
-    await product.save()
+    await product.save();
     cart.totalAmount += existsInCart.unitPrice * qty;
     const updatedCart = await cart.save();
     return {
@@ -60,9 +60,51 @@ export const addItemToCart = async ({ userId, productId, quantity }) => {
 
   cart.items.push({ product: productId, unitPrice, quantity: qty });
   product.stock -= qty;
-  await product.save()
+  await product.save();
   cart.totalAmount += unitPrice * qty;
   const updatedCart = await cart.save();
+  return {
+    statusCode: 200,
+    data: updatedCart,
+  };
+};
+
+export const updateCartItem = async ({ userId, productId, quantity }) => {
+  const cart = await getActiveCartForUser({ userId });
+  const existsInCart = cart.items.find(
+    (p) => p.product.toString() === productId,
+  );
+  if (!existsInCart) {
+    return {
+      statusCode: 404,
+      data: "item not found",
+    };
+  }
+  const product = await ProductModel.findById(productId);
+  if (!product) {
+    return {
+      statusCode: 404,
+      data: "Product not found",
+    };
+  }
+  const oldQuantity = existsInCart.quantity;
+  const reqQuantity = quantity - oldQuantity;
+  if (reqQuantity > 0 && product.stock < reqQuantity) {
+    return {
+      statusCode: 400,
+      data: "low stock ",
+    };
+  }
+  product.stock -= reqQuantity;
+  await product.save();
+
+  const otherCartItem = cart.items.filter(p => p.product.toString() !== productId)
+  let total = otherCartItem.reduce((sum,product) => sum += product.quantity * product.unitPrice, 0)
+  existsInCart.quantity = quantity
+  total += existsInCart.quantity * existsInCart.unitPrice
+  cart.totalAmount = total
+  const updatedCart = await cart.save()
+
   return {
     statusCode: 200,
     data: updatedCart,
