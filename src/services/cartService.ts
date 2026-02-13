@@ -35,7 +35,7 @@ export const addItemToCart = async ({ userId, productId, quantity }) => {
     (p) => p.product.toString() === productId,
   );
   if (existsInCart) {
-    if (product.stock < quantity || product.stock === 0) {
+    if (product.stock < qty || product.stock === 0) {
       return {
         statusCode: 400,
         data: "low stock ",
@@ -98,13 +98,79 @@ export const updateCartItem = async ({ userId, productId, quantity }) => {
   product.stock -= reqQuantity;
   await product.save();
 
-  const otherCartItem = cart.items.filter(p => p.product.toString() !== productId)
-  let total = otherCartItem.reduce((sum,product) => sum += product.quantity * product.unitPrice, 0)
-  existsInCart.quantity = quantity
-  total += existsInCart.quantity * existsInCart.unitPrice
-  cart.totalAmount = total
-  const updatedCart = await cart.save()
+  const otherCartItem = cart.items.filter(
+    (p) => p.product.toString() !== productId,
+  );
+  let total = otherCartItem.reduce(
+    (sum, product) => (sum += product.quantity * product.unitPrice),
+    0,
+  );
+  existsInCart.quantity = quantity;
+  total += existsInCart.quantity * existsInCart.unitPrice;
+  cart.totalAmount = total;
+  const updatedCart = await cart.save();
 
+  return {
+    statusCode: 200,
+    data: updatedCart,
+  };
+};
+
+export const deleteItemInCart = async ({ userId, productId }) => {
+  const cart = await getActiveCartForUser({ userId });
+  const existsInCart = cart.items.find(
+    (p) => p.product.toString() === productId,
+  );
+  if (!existsInCart) {
+    return {
+      statusCode: 404,
+      data: "item not found",
+    };
+  }
+  const otherCartItem = cart.items.filter(
+    (p) => p.product.toString() !== productId,
+  );
+  cart.items = otherCartItem;
+  const total = otherCartItem.reduce((sum, product) => {
+    sum += product.quantity * product.unitPrice;
+    return sum;
+  }, 0);
+  const product = await ProductModel.findById(productId);
+  if (!product) {
+    return {
+      statusCode: 404,
+      data: "product not found",
+    };
+  }
+  const oldQuantity = existsInCart.quantity;
+  product.stock += oldQuantity;
+  await product.save();
+  cart.totalAmount = total;
+  const updatedCart = await cart.save();
+
+  return {
+    statusCode: 200,
+    data: updatedCart,
+  };
+};
+export const clearCart = async ({ userId }) => {
+  const cart = await getActiveCartForUser({ userId });
+  if (!cart) {
+    return {
+      statusCode: 404,
+      data: "cart not found",
+    };
+  }
+  for (const item of cart.items) {
+    const product = await ProductModel.findById(item.product);
+    if (product) {
+      product.stock += item.quantity;
+      await product.save();
+    }
+  }
+  cart.items = [];
+  cart.totalAmount = 0;
+  const updatedCart = await cart.save();
   return {
     statusCode: 200,
     data: updatedCart,

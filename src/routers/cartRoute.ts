@@ -1,6 +1,6 @@
 import express from "express";
 import { validateJWT } from "../middlewares/validateJWT";
-import { addItemToCart, getActiveCartForUser, updateCartItem } from "../services/cartService";
+import { addItemToCart, clearCart, deleteItemInCart, getActiveCartForUser, updateCartItem } from "../services/cartService";
 import { zCartItemSchema } from "../validation/cartValidation";
 
 const router = express.Router();
@@ -46,4 +46,34 @@ router.put('/item',validateJWT, async (req, res) => {
     data
   })
 })
+
+router.delete('/item/:id', validateJWT, async (req, res) => {
+  const productId = req.params.id
+  const userId = req.userId 
+  const {statusCode, data} = await deleteItemInCart({userId, productId})
+  if(statusCode !== 200){
+    return res.status(statusCode).json({
+      message : data
+    })
+  }
+  res.status(statusCode).json({
+    message : 'deleted from cart',
+    data  
+  })
+})
+
+router.delete('/', validateJWT, async (req, res) => {
+  const userId = req.userId
+  const {statusCode, data} = await clearCart({userId})
+  if(statusCode !== 200){
+    return res.status(statusCode).json({
+      message : data
+    })
+  }
+  res.status(statusCode).json({
+    message : 'cart cleared',
+    data
+  })
+})
+
 export default router;
