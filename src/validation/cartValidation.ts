@@ -5,7 +5,7 @@ export const cartStatusEnum = ["active", "complete"] as const;
 
 export const zCartItemSchema = z.object({
   product: zProductSchema,
-  unitPrice: z.number(),
+  unitPrice: z.number().optional(),
   quantity: z.number().default(1),
 });
 export type ICartItem = z.infer<typeof zCartItemSchema>;

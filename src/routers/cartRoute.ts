@@ -1,6 +1,7 @@
 import express from "express";
 import { validateJWT } from "../middlewares/validateJWT";
-import { getActiveCartForUser } from "../services/cartService";
+import { addItemToCart, getActiveCartForUser } from "../services/cartService";
+import { zCartItemSchema } from "../validation/cartValidation";
 
 const router = express.Router();
 
@@ -16,4 +17,18 @@ router.get("/", validateJWT, async (req, res) => {
   });
 });
 
+router.post('/item',validateJWT, async (req, res) =>  {
+  const userId = req.userId
+  const {productId, quantity} = req.body
+  const {statusCode, data} = await addItemToCart({userId, productId, quantity})
+  if(statusCode !== 200){
+    return res.status(statusCode).json({
+      message : data
+    })
+  }
+  res.status(statusCode).json({
+    message : 'added to cart',
+    data
+  })
+})
 export default router;

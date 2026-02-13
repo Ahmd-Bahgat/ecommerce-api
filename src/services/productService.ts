@@ -1,9 +1,9 @@
-import { productModel } from "../models/productModel";
+import { ProductModel } from "../models/productModel";
 import { IProduct } from "../validation/productValidation";
 
 export const getAllProduct = async () => {
   try {
-    const products = await productModel.find();
+    const products = await ProductModel.find();
     if (products.length === 0) {
       return { statusCode: 404, data: "not found any product" };
     }
@@ -14,12 +14,12 @@ export const getAllProduct = async () => {
   }
 };
 
-export const addProduct = async ({ title, image, price, stok }: IProduct) => {
+export const addProduct = async ({ title, image, price, stock }: IProduct) => {
   try {
-    const findProduct = await productModel.findOne({ title });
+    const findProduct = await ProductModel.findOne({ title });
     if (findProduct) return { statusCode: 400, data: "product already exists" };
 
-    const newProduct = new productModel({ title, image, price, stok });
+    const newProduct = new ProductModel({ title, image, price, stock });
     await newProduct.save();
     return {
       statusCode: 201,
