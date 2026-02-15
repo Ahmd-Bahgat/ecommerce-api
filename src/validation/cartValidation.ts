@@ -1,11 +1,11 @@
 import z from "zod";
-import { zProductSchema } from "./productValidation";
+import { Types } from "mongoose";
 
 export const cartStatusEnum = ["active", "complete"] as const;
 
 export const zCartItemSchema = z.object({
-  product: zProductSchema,
-  unitPrice: z.number().optional(),
+  productId: z.string() || z.instanceof(Types.ObjectId),
+  unitPrice: z.number(),
   quantity: z.number().default(1),
 });
 export type ICartItem = z.infer<typeof zCartItemSchema>;

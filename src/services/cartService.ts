@@ -32,7 +32,7 @@ export const addItemToCart = async ({ userId, productId, quantity }) => {
   const qty = quantity ?? 1;
 
   const existsInCart = cart.items.find(
-    (p) => p.product.toString() === productId,
+    (p) => p.productId.toString() === productId,
   );
   if (existsInCart) {
     if (product.stock < qty || product.stock === 0) {
@@ -51,14 +51,14 @@ export const addItemToCart = async ({ userId, productId, quantity }) => {
       data: updatedCart,
     };
   }
-  if (product.stock < quantity || product.stock === 0) {
+  if (product.stock < qty || product.stock === 0) {
     return {
       statusCode: 400,
       data: "low stock ",
     };
   }
 
-  cart.items.push({ product: productId, unitPrice, quantity: qty });
+  cart.items.push({ productId, unitPrice, quantity: qty });
   product.stock -= qty;
   await product.save();
   cart.totalAmount += unitPrice * qty;
@@ -72,7 +72,7 @@ export const addItemToCart = async ({ userId, productId, quantity }) => {
 export const updateCartItem = async ({ userId, productId, quantity }) => {
   const cart = await getActiveCartForUser({ userId });
   const existsInCart = cart.items.find(
-    (p) => p.product.toString() === productId,
+    (p) => p.productId.toString() === productId,
   );
   if (!existsInCart) {
     return {
@@ -99,7 +99,7 @@ export const updateCartItem = async ({ userId, productId, quantity }) => {
   await product.save();
 
   const otherCartItem = cart.items.filter(
-    (p) => p.product.toString() !== productId,
+    (p) => p.productId.toString() !== productId,
   );
   let total = otherCartItem.reduce(
     (sum, product) => (sum += product.quantity * product.unitPrice),
@@ -119,7 +119,7 @@ export const updateCartItem = async ({ userId, productId, quantity }) => {
 export const deleteItemInCart = async ({ userId, productId }) => {
   const cart = await getActiveCartForUser({ userId });
   const existsInCart = cart.items.find(
-    (p) => p.product.toString() === productId,
+    (p) => p.productId.toString() === productId,
   );
   if (!existsInCart) {
     return {
@@ -128,7 +128,7 @@ export const deleteItemInCart = async ({ userId, productId }) => {
     };
   }
   const otherCartItem = cart.items.filter(
-    (p) => p.product.toString() !== productId,
+    (p) => p.productId.toString() !== productId,
   );
   cart.items = otherCartItem;
   const total = otherCartItem.reduce((sum, product) => {
@@ -162,7 +162,7 @@ export const clearCart = async ({ userId }) => {
     };
   }
   for (const item of cart.items) {
-    const product = await ProductModel.findById(item.product);
+    const product = await ProductModel.findById(item.productId);
     if (product) {
       product.stock += item.quantity;
       await product.save();

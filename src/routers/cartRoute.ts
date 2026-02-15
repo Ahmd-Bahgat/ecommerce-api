@@ -1,6 +1,12 @@
 import express from "express";
 import { validateJWT } from "../middlewares/validateJWT";
-import { addItemToCart, clearCart, deleteItemInCart, getActiveCartForUser, updateCartItem } from "../services/cartService";
+import {
+  addItemToCart,
+  clearCart,
+  deleteItemInCart,
+  getActiveCartForUser,
+  updateCartItem,
+} from "../services/cartService";
 import { zCartItemSchema } from "../validation/cartValidation";
 
 const router = express.Router();
@@ -17,63 +23,89 @@ router.get("/", validateJWT, async (req, res) => {
   });
 });
 
-router.post('/item',validateJWT, async (req, res) =>  {
-  const userId = req.userId
-  const {productId, quantity} = req.body
-  const {statusCode, data} = await addItemToCart({userId, productId, quantity})
-  if(statusCode !== 200){
-    return res.status(statusCode).json({
-      message : data
-    })
-  }
-  res.status(statusCode).json({
-    message : 'added to cart',
-    data
-  })
-})
+// to validation
+const validate = zCartItemSchema.pick({ productId: true, quantity: true });
 
-router.put('/item',validateJWT, async (req, res) => {
-  const userId = req.userId
-  const {productId, quantity} = req.body
-  const {statusCode, data} = await updateCartItem({userId, productId, quantity})
-  if(statusCode !== 200){
+router.post("/item", validateJWT, async (req, res) => {
+  const userId = req.userId;
+  const result = validate.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      message: result.error.message,
+    });
+  }
+  const { productId, quantity } = result.data;
+  const { statusCode, data } = await addItemToCart({
+    userId,
+    productId,
+    quantity,
+  });
+  if (statusCode !== 200) {
     return res.status(statusCode).json({
-      message : data
-    })
+      message: data,
+    });
   }
   res.status(statusCode).json({
-    message : 'updated cart',
-    data
-  })
-})
+    message: "added to cart",
+    data,
+  });
+});
 
-router.delete('/item/:id', validateJWT, async (req, res) => {
-  const productId = req.params.id
-  const userId = req.userId 
-  const {statusCode, data} = await deleteItemInCart({userId, productId})
-  if(statusCode !== 200){
+router.put("/item", validateJWT, async (req, res) => {
+  const userId = req.userId;
+  const result = validate.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      message: result.error.message,
+    });
+  }
+  const { productId, quantity } = result.data;
+  const { statusCode, data } = await updateCartItem({
+    userId,
+    productId,
+    quantity,
+  });
+  if (statusCode !== 200) {
     return res.status(statusCode).json({
-      message : data
-    })
+      message: data,
+    });
   }
   res.status(statusCode).json({
-    message : 'deleted from cart',
-    data  
-  })
-})
+    message: "updated cart",
+    data,
+  });
+});
 
-router.delete('/', validateJWT, async (req, res) => {
-  const userId = req.userId
-  const {statusCode, data} = await clearCart({userId})
-  if(statusCode !== 200){
+
+// delete item form cart
+router.delete("/item/:id", validateJWT, async (req, res) => {
+  const productId = req.params.id;
+  const userId = req.userId;
+  const { statusCode, data } = await deleteItemInCart({ userId, productId });
+  if (statusCode !== 200) {
     return res.status(statusCode).json({
-      message : data
-    })
+      message: data,
+    });
   }
   res.status(statusCode).json({
-    message : 'cart cleared',
-    data
-  })
-})
+    message: "deleted from cart",
+    data,
+  });
+});
+
+// clear cart
+router.delete("/", validateJWT, async (req, res) => {
+  const userId = req.userId;
+  const { statusCode, data } = await clearCart({ userId });
+  if (statusCode !== 200) {
+    return res.status(statusCode).json({
+      message: data,
+    });
+  }
+  res.status(statusCode).json({
+    message: "cart cleared",
+    data,
+  });
+});
 
 export default router;

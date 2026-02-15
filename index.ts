@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import userRouter from "./src/routers/userRoute";
 import productRouter from "./src/routers/productRoute";
 import cartRouter from "./src/routers/cartRoute";
+import orderRouter from "./src/routers/orderRoute";
 import connectDB from "./src/config/db";
 import { errorHandler } from "./src/middlewares/errorHandler";
 dotenv.config();
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use("/user", userRouter);
 app.use("/product", productRouter)
 app.use('/cart', cartRouter);
+app.use('/order', orderRouter)
 
 //middlewares
 app.use(errorHandler);

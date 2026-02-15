@@ -25,8 +25,8 @@ router.post("/register", async (req, res, next) => {
         .json({ message: "Invalid data", error: parsed.error });
     }
 
-    const result = await register(parsed.data);
-    res.status(result.statusCode).json(result.data);
+    const {statusCode, data} = await register(parsed.data);
+    res.status(statusCode).json(data);
   } catch (error) {
     next(error);
   }
@@ -34,15 +34,14 @@ router.post("/register", async (req, res, next) => {
 
 router.post("/login", async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
+    const parsed = zUserSchema.pick({email:true,password:true}).safeParse(req.body)
+    if(!parsed.success){
+      return res.status(400).json({message:"Invalid data", error:parsed.error})
     }
+    const { email, password } = parsed.data;
 
-    const result = await login({ email, password });
-    res.status(result.statusCode).json(result.data);
+    const {statusCode, data} = await login({ email, password });
+    res.status(statusCode).json(data);
   } catch (error) {
     next(error);
   }
