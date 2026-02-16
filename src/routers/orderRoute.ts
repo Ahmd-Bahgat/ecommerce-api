@@ -1,10 +1,11 @@
 import express from "express";
+import asyncHandler from "../utils/asyncHandler";
 import { validateJWT } from "../middlewares/validateJWT";
 import { checkout } from "../services/orderService";
 
 const router = express.Router();
 
-router.post("/checkout", validateJWT,async (req, res) => {
+router.post("/checkout", validateJWT,asyncHandler(async (req, res) => {
     const userId = req.userId
     const {address} = req.body
     if(!address){
@@ -18,6 +19,6 @@ router.post("/checkout", validateJWT,async (req, res) => {
         message: 'order complete',
         data})
     
-})
+}))
 
 export default router;
