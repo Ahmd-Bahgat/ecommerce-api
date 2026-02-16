@@ -3,6 +3,7 @@ import asyncHandler from "../utils/asyncHandler";
 import { userModel } from "../models/userModel";
 import { zUserSchema } from "../validation/userValidation";
 import { login, register } from "../services/userService";
+import AppError from "../utils/appError";
 const router = express.Router();
 
 router.get(
@@ -10,7 +11,7 @@ router.get(
   asyncHandler(async (req, res, next) => {
     const users = await userModel.find();
     if (!users.length) {
-      return res.status(404).json({ message: "No users found" });
+      throw new AppError("No users found", 404);
     }
     res.status(200).json({ message: "Users found", data: users });
   }),
@@ -21,9 +22,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const parsed = zUserSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res
-        .status(400)
-        .json({ message: "Invalid data", error: parsed.error });
+      throw new AppError(`Invalid data`, 400);
     }
 
     const { statusCode, data } = await register(parsed.data);
@@ -38,9 +37,7 @@ router.post(
       .pick({ email: true, password: true })
       .safeParse(req.body);
     if (!parsed.success) {
-      return res
-        .status(400)
-        .json({ message: "Invalid data", error: parsed.error });
+      throw new AppError(`Invalid data`, 400);
     }
     const { email, password } = parsed.data;
 

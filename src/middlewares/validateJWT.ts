@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import AppError from "../utils/appError";
 dotenv.config();
 
 export const validateJWT = (
@@ -10,27 +11,19 @@ export const validateJWT = (
 ) => {
   const authorizationHeader = req.get("authorization");
   if (!authorizationHeader) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
+    throw new AppError("Unauthorized", 401);
   }
   const token = authorizationHeader.split(" ")[1];
   if (!authorizationHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
+    throw new AppError("Unauthorized", 401);
   }
 
   jwt.verify(token, process.env.SECRET_KEY as string, async (err, payload) => {
     if (err) {
-      return res.status(401).json({
-        message: "Unauthorized",
-      });
+      throw new AppError("Unauthorized", 401);
     }
     if (!payload || typeof payload === "string") {
-      return res.status(401).json({
-        message: "Unauthorized",
-      });
+      throw new AppError("Unauthorized", 401);
     }
     req.userId = payload.userId;
     next();

@@ -3,6 +3,7 @@ import { IUser } from "../validation/userValidation";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import AppError from "../utils/appError";
 dotenv.config();
 
 interface ServiceResponse {
@@ -16,10 +17,9 @@ export const register = async ({
   email,
   password,
 }: IUser): Promise<ServiceResponse> => {
-  try {
     const findUser = await userModel.findOne({ email });
     if (findUser) {
-      return { statusCode: 400, data: "User already exists" };
+      throw new AppError('User already exists', 400)
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -48,10 +48,6 @@ export const register = async ({
         },
       },
     };
-  } catch (error) {
-    console.error(error);
-    throw new Error("Internal server error");
-  }
 };
 
 interface ILogin {
@@ -63,15 +59,14 @@ export const login = async ({
   email,
   password,
 }: ILogin): Promise<ServiceResponse> => {
-  try {
     const findUser = await userModel.findOne({ email });
     if (!findUser) {
-      return { statusCode: 401, data: "Incorrect email or password" };
+      throw new AppError('Incorrect email or password', 401)
     }
 
     const isMatch = await bcrypt.compare(password, findUser.password);
     if (!isMatch) {
-      return { statusCode: 401, data: "Incorrect email or password" };
+      throw new AppError('Incorrect email or password', 401);
     }
 
     const userId = findUser._id.toString();
@@ -89,15 +84,11 @@ export const login = async ({
         },
       },
     };
-  } catch (error) {
-    console.error(error);
-    throw new Error("Internal server error");
-  }
 };
 
 function generateJWT(payload: {userId: string}) {
   if (!process.env.SECRET_KEY) {
-    throw new Error("SECRET_KEY is not defined");
+    throw new AppError("SECRET_KEY is not defined", 500);
   }
 
   return jwt.sign(payload, process.env.SECRET_KEY, {

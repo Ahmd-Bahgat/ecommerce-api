@@ -23,13 +23,10 @@ router.post(
   asyncHandler(async (req, res) => {
     const product = zProductSchema.safeParse(req.body);
     if (!product.success) {
-      throw new AppError(`${product.error}`, 400)
+      throw new AppError('Invalid product data', 400)
     }
-    const result = await addProduct(product.data);
-    if (!result || result.statusCode === undefined) {
-      throw new AppError('Add product faild', 400)
-    }
-    res.status(result.statusCode).json(result.data);
+    const {statusCode, data} = await addProduct(product.data);
+    res.status(statusCode).json(data);
   }),
 );
 
