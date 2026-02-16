@@ -20,9 +20,8 @@ app.use("/product", productRouter)
 app.use('/cart', cartRouter);
 app.use('/order', orderRouter)
 
-// global error handler
-app.all('*', (req, res, next) => {
-  next(new AppError(`can't find ${req.originalUrl} on this server!`, 404))
+app.use((req, res, next) => {
+  next(new AppError(`can't find ${req.originalUrl} on this server `, 404))
 })
 app.use(errorHandler);
 
