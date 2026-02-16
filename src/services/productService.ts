@@ -1,32 +1,25 @@
 import { ProductModel } from "../models/productModel";
+import AppError from "../utils/appError";
 import { IProduct } from "../validation/productValidation";
 
 export const getAllProduct = async () => {
-  try {
-    const products = await ProductModel.find();
-    if (products.length === 0) {
-      return { statusCode: 404, data: "not found any product" };
-    }
-    return { statusCode: 200, data: { message: "product found", products } };
-  } catch (error) {
-    console.error(error);
-    throw error;
+  const products = await ProductModel.find();
+  if (products.length === 0) {
+    throw new AppError("not found any product", 404);
   }
+  return { statusCode: 200, data: { message: "product found", products } };
 };
 
 export const addProduct = async ({ title, image, price, stock }: IProduct) => {
-  try {
-    const findProduct = await ProductModel.findOne({ title });
-    if (findProduct) return { statusCode: 400, data: "product already exists" };
-
-    const newProduct = new ProductModel({ title, image, price, stock });
-    await newProduct.save();
-    return {
-      statusCode: 201,
-      data: { message: "Product added successfully", newProduct },
-    };
-  } catch (error) {
-    console.error(error);
-    throw error;
+  const findProduct = await ProductModel.findOne({ title });
+  if (findProduct) {
+    throw new AppError("Product already exists", 400);
   }
+
+  const newProduct = new ProductModel({ title, image, price, stock });
+  await newProduct.save();
+  return {
+    statusCode: 201,
+    data: { message: "Product added successfully", newProduct },
+  };
 };
