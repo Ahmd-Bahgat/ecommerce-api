@@ -1,37 +1,23 @@
 import { OrderModel } from "../models/orderModel";
 import { ProductModel } from "../models/productModel";
 import { getActiveCartForUser } from "./cartService";
+import AppError from "../utils/appError";
+import asyncHandler from "../utils/asyncHandler";
 
 export const checkout = async ({ userId, address }) => {
   const cart = await getActiveCartForUser({ userId });
   if (!cart) {
-    return { statusCode: 404, data: "Cart not found" };
+    throw new AppError("Cart not found", 404);
   }
 
-  //check and update stock
-
-  //   for(const item of cart.items){
-  //     const product = await ProductModel.findById(item.productId)
-  //     if(!product){
-  //         return {
-  //             statusCode: 404,
-  //             data: "Product not found"
-  //         }
-  //     }
-  //     if(product.stock < item.quantity){
-  //         return {
-  //             statusCode: 400,
-  //             data: "Product stock is not enough"
-  //         }
-  //     }
-  //     product.stock -= item.quantity;
-  //     await product.save();
-  //   }
+  if(cart.items.length === 0){
+    throw new AppError('Cart is empty', 400)
+  }
 
   const orderItemsPromise = cart.items.map(async (item) => {
     const product = await ProductModel.findById(item.productId);
     if (!product) {
-      return { statusCode: 404, data: "Product not found" };
+      throw new AppError("Product not found", 404);
     }
     return {
       productTitle: product.title,
@@ -49,5 +35,8 @@ export const checkout = async ({ userId, address }) => {
   });
   cart.status = "complete";
   await cart.save();
-  return { statusCode: 200, data: order };
+  return {
+    statusCode: 200,
+    data: order 
+  };
 };

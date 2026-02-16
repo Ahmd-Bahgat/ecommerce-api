@@ -6,6 +6,7 @@ const errorHandler = (err, req, res, next) => {
     success: false,
     statusCode,
     message,
+    stack: err.stack
   });
 };
 

@@ -1,5 +1,6 @@
 import { CartModel } from "../models/cartModel";
 import { ProductModel } from "../models/productModel";
+import AppError from "../utils/appError";
 
 interface CreateCartForUser {
   userId: string;
@@ -23,10 +24,7 @@ export const addItemToCart = async ({ userId, productId, quantity }) => {
 
   const product = await ProductModel.findById(productId);
   if (!product) {
-    return {
-      statusCode: 404,
-      data: "Product not found",
-    };
+    throw new AppError('Product not found', 404)
   }
   const unitPrice = product.price ?? 0;
   const qty = quantity ?? 1;
@@ -36,10 +34,7 @@ export const addItemToCart = async ({ userId, productId, quantity }) => {
   );
   if (existsInCart) {
     if (product.stock < qty || product.stock === 0) {
-      return {
-        statusCode: 400,
-        data: "low stock ",
-      };
+      throw new AppError('Low stock', 400)
     }
     existsInCart.quantity += qty;
     product.stock -= qty;
@@ -52,10 +47,7 @@ export const addItemToCart = async ({ userId, productId, quantity }) => {
     };
   }
   if (product.stock < qty || product.stock === 0) {
-    return {
-      statusCode: 400,
-      data: "low stock ",
-    };
+    throw new AppError('Low stock', 400)
   }
 
   cart.items.push({ productId, unitPrice, quantity: qty });
@@ -75,25 +67,16 @@ export const updateCartItem = async ({ userId, productId, quantity }) => {
     (p) => p.productId.toString() === productId,
   );
   if (!existsInCart) {
-    return {
-      statusCode: 404,
-      data: "item not found",
-    };
+    throw new AppError('Item not found', 404)
   }
   const product = await ProductModel.findById(productId);
   if (!product) {
-    return {
-      statusCode: 404,
-      data: "Product not found",
-    };
+    throw new AppError('Product not found', 404)
   }
   const oldQuantity = existsInCart.quantity;
   const reqQuantity = quantity - oldQuantity;
   if (reqQuantity > 0 && product.stock < reqQuantity) {
-    return {
-      statusCode: 400,
-      data: "low stock ",
-    };
+    throw new AppError('Low stock', 400)
   }
   product.stock -= reqQuantity;
   await product.save();
@@ -122,10 +105,7 @@ export const deleteItemInCart = async ({ userId, productId }) => {
     (p) => p.productId.toString() === productId,
   );
   if (!existsInCart) {
-    return {
-      statusCode: 404,
-      data: "item not found",
-    };
+    throw new AppError('Item not found', 400)
   }
   const otherCartItem = cart.items.filter(
     (p) => p.productId.toString() !== productId,
@@ -137,10 +117,7 @@ export const deleteItemInCart = async ({ userId, productId }) => {
   }, 0);
   const product = await ProductModel.findById(productId);
   if (!product) {
-    return {
-      statusCode: 404,
-      data: "product not found",
-    };
+    throw new AppError('Product not found', 404)
   }
   const oldQuantity = existsInCart.quantity;
   product.stock += oldQuantity;
@@ -156,10 +133,7 @@ export const deleteItemInCart = async ({ userId, productId }) => {
 export const clearCart = async ({ userId }) => {
   const cart = await getActiveCartForUser({ userId });
   if (!cart) {
-    return {
-      statusCode: 404,
-      data: "cart not found",
-    };
+    throw new AppError('Cart not found', 404)
   }
   for (const item of cart.items) {
     const product = await ProductModel.findById(item.productId);

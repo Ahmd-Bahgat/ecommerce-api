@@ -9,6 +9,7 @@ import {
   updateCartItem,
 } from "../services/cartService";
 import { zCartItemSchema } from "../validation/cartValidation";
+import AppError from "../utils/appError";
 
 const router = express.Router();
 
@@ -38,10 +39,9 @@ router.post(
     const userId = req.userId;
     const result = validate.safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({
-        message: result.error.message,
-      });
-    }
+       throw new AppError('Invalid data ', 400)
+      };
+
     const { productId, quantity } = result.data;
     const { statusCode, data } = await addItemToCart({
       userId,
