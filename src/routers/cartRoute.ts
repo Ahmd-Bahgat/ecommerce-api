@@ -12,7 +12,8 @@ import { zCartItemSchema } from "../validation/cartValidation";
 const router = express.Router();
 
 router.get("/", validateJWT, async (req, res) => {
-  const userId = req.userId;
+  try {
+    const userId = req.userId;
   if (!userId) {
     return res.status(400).json({ message: "User ID missing" });
   }
@@ -21,13 +22,18 @@ router.get("/", validateJWT, async (req, res) => {
     message: "Cart found",
     cart,
   });
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
 });
 
 // to validation
 const validate = zCartItemSchema.pick({ productId: true, quantity: true });
 
 router.post("/item", validateJWT, async (req, res) => {
-  const userId = req.userId;
+  try {
+      const userId = req.userId;
   const result = validate.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({
@@ -49,6 +55,10 @@ router.post("/item", validateJWT, async (req, res) => {
     message: "added to cart",
     data,
   });
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
 });
 
 router.put("/item", validateJWT, async (req, res) => {

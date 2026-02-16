@@ -5,7 +5,8 @@ import productRouter from "./src/routers/productRoute";
 import cartRouter from "./src/routers/cartRoute";
 import orderRouter from "./src/routers/orderRoute";
 import connectDB from "./src/config/db";
-import { errorHandler } from "./src/middlewares/errorHandler";
+import errorHandler from "./src/middlewares/errorHandler";
+import AppError from "./src/utils/appError";
 dotenv.config();
 connectDB();
 
@@ -19,7 +20,10 @@ app.use("/product", productRouter)
 app.use('/cart', cartRouter);
 app.use('/order', orderRouter)
 
-//middlewares
+// global error handler
+app.all('*', (req, res, next) => {
+  next(new AppError(`can't find ${req.originalUrl} on this server!`, 404))
+})
 app.use(errorHandler);
 
 app.listen(port, () => {

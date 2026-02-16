@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/typescript": "^0.4.29",
+    "async-handler-express": "^0.2.4",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
